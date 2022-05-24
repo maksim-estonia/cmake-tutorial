@@ -4,6 +4,13 @@
 
 The tutorial documentation and source code for examples can be found in `CMake/Help/guide/tutorial`. 
 
+- [CMake Tutorial](#cmake-tutorial)
+  - [Step 1](#step-1)
+    - [Adding a Version number and Configured Header File](#adding-a-version-number-and-configured-header-file)
+    - [Specify the C++ Standard](#specify-the-c-standard)
+    - [Rebuild](#rebuild)
+  - [Step 2: Adding a Library](#step-2-adding-a-library)
+
 ## Step 1
 
 The most basic project is an executable built from source code files. 
@@ -84,3 +91,91 @@ We will need to explicitly state in the CMake code that it should use the correc
 `cd build`
 
 `cmake --build .`
+
+## Step 2: Adding a Library
+
+We will put the library into a subdirectory called `MathFunctions`. This directory contains a header file, `MathFunctions.h`, and a source file `mysqrt.cxx`.
+
+Add the following one line `CMakeLists.txt` file to the MathFunctions directory
+
+```cmake
+add_library(MathFunctions mysqrt.cxx)
+```
+
+To make use of the new library we will add an `add_subdirectory()` call in the top-level `CMakeLists.txt` file so that the library will get build.
+
+```cmake
+target_link_libraries(Tutorial PUBLIC MathFunctions)
+
+target_include_directories(Tutorial PUBLIC
+                          "${PROJECT_BINARY_DIR}"
+                          "${PROJECT_SOURCE_DIR}/MathFunctions"
+                          )
+```
+
+Now let us make `MathFunctions` library optional. The first step is to add an option to the top-level `CMakeLists.txt`. 
+
+```cmake
+option(USE_MYMATH "Use tutorial provided math implementation" ON)
+```
+
+This option will be displayed in the `cmake-gui` and `ccmake` with a default value of `ON` that can be changed by the user. 
+
+The next change is to make building and linking the `MathFunctions` library conditional. 
+
+```cmake
+if(USE_MYMATH)
+  add_subdirectory(MathFunctions)
+  list(APPEND EXTRA_LIBS MathFunctions)
+  list(APPEND EXTRA_INCLUDES "${PROJECT_SOURCE_DIR}/MathFunctions")
+endif()
+
+# add the executable
+add_executable(Tutorial tutorial.cxx)
+
+target_link_libraries(Tutorial PUBLIC ${EXTRA_LIBS})
+
+# add the binary tree to the search path for include files
+# so that we will find TutorialConfig.h
+target_include_directories(Tutorial PUBLIC
+                           "${PROJECT_BINARY_DIR}"
+                           ${EXTRA_INCLUDES}
+                           )
+```
+
+Note the use of the variable `EXTRA_LIBS` to  collect any optional libraries to later be linked into the executable. The variable is used similarly for optional header files.
+
+First, in `tutorial.cxx`, include the `MathFunctions.h` header if we need it:
+
+```
+#ifdef USE_MYMATH
+#   include "MathFunctions.h"
+#endif
+```
+
+Then, in the same file, make USE_MYMATH control which square root function is used:
+
+```cmake
+#ifdef USE_MYMATH
+    const double outputValue = mysqrt(inputValue);
+#else
+    const double outputValue = sqrt(inputValue);
+#endif
+```
+
+Since the source code now requires `USE_MYMATH` we can add it to `TutorialConfig.h.in` with the following line:
+
+Build:
+
+```
+cd build
+cmake ..
+cmake --build .
+```
+
+or using option `USE_MYMATH`:
+
+```
+cmake .. -D USE_MYMATH=OFF
+cmake --build .
+```
