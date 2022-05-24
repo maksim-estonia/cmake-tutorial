@@ -14,6 +14,8 @@ The tutorial documentation and source code for examples can be found in `CMake/H
   - [Step 4: Installing and Testing](#step-4-installing-and-testing)
     - [Install Rules](#install-rules)
     - [Testing Support](#testing-support)
+  - [CMakeGraphVizOptions](#cmakegraphvizoptions)
+    - [Generating Graphviz files](#generating-graphviz-files)
 
 ## Step 1
 
@@ -312,3 +314,16 @@ ctest -N
 ctest -VV
 ```
 
+## CMakeGraphVizOptions
+
+### Generating Graphviz files
+
+CMake can generate Graphviz files showing the dependencies between the targets in a project, as well as external libraries which are linked against. 
+
+```
+cd step-4/build
+cmake --graphviz=graph.dot ..
+dot -T png -o graph.png graph.dot
+```
+
+![graph](step-4/graph.png)
