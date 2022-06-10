@@ -323,6 +323,7 @@ CMake can generate Graphviz files showing the dependencies between the targets i
 ```
 cd step-4/build
 cmake --graphviz=graph.dot ..
+# convert to png image
 dot -T png -o graph.png graph.dot
 ```
 
